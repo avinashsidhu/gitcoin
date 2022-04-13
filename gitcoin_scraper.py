@@ -32,7 +32,6 @@ def resume(pk_lst, file='data.json'):
 config = config()
 proxy = Proxy(config)
 print(proxy)
-dd
 
 # List of PKs to collect
 pk_lst = list(range(28563, 0, -1))
@@ -49,7 +48,7 @@ for pk in tqdm(pk_lst, desc='Fetching: '):
     proxy.shuffle()
     r = proxy.get(url)
 
-    # # export to json
-    # r.to_json()
-    # # export to pickle
-    # r.to_pkl()
+    # export to json
+    r.to_json()
+    # export to pickle
+    r.to_pkl()
