@@ -1,9 +1,16 @@
 from pathlib import Path
 from importlib.util import find_spec
 import datetime, time, pickle
-from configparser import ConfigParser
 import yaml
+from dateutil import parser
  
+def convert_type(self, varlist: list, method: object):
+    for var in varlist:
+        value = method(getattr(self, var))
+        setattr(self, var, value)
+convert_to_date = lambda x: parser.isoparse(x).replace(tzinfo=None) if x else None
+convert_to_float = lambda x: float(x) if x else None
+
 def get_path(folder, file):
     '''Package path. __init__ required'''
     path = Path(*find_spec(folder).submodule_search_locations) / file
@@ -34,26 +41,3 @@ def config(section: str=None, filename='etc/config.yaml'):
         else:
             config = yaml.safe_load(f)
     return config
-
-
-
-# def config(section, filename='etc/config.ini'):
-#     # create a parser
-#     parser = ConfigParser()
-#     # read config file
-#     parser.read(filename)
- 
-#     # get section, default to postgresql
-#     db = {}
-    
-#     # Checks to see if section (postgresql) parser exists
-#     if parser.has_section(section):
-#         params = parser.items(section)
-#         for param in params:
-#             db[param[0]] = param[1]
-         
-#     # Returns an error if a parameter is called that is not listed in the initialization file
-#     else:
-#         raise Exception('Section {0} not found in the {1} file'.format(section, filename))
- 
-#     return db
