@@ -1,9 +1,50 @@
 from pathlib import Path
 from importlib.util import find_spec
-import datetime, time, pickle
+import time, pickle
 import yaml
 from dateutil import parser
- 
+
+class ToDictMixin:
+    def to_dict(self, varlist=[]):
+        if not varlist:
+            properties = self._get_properties()
+            varlist = {**self.__dict__, **properties}
+        return {
+            prop: self._represent(value)
+            for prop, value in varlist.items()
+            if not self._is_internal(prop)
+        }
+    def _get_properties(self):
+        properties = {}
+        for p in dir(self):
+            try:
+                is_property = isinstance(getattr(type(self),p), property)
+            except AttributeError:
+                continue
+            if is_property:
+                properties[p] = getattr(self, p)
+        return properties
+    def _represent(self, value):
+        if isinstance(value, object):
+            if hasattr(value, 'to_dict'):
+                return value.to_dict()
+            else:
+                return str(value)
+        else:
+            return value
+    def _is_internal(self, prop):
+        return prop.startswith('_')
+
+
+def to_date(x):
+    return parser.isoparse(x).replace(tzinfo=None).date() if x else None
+
+def to_float(x):
+    return float(x) if x else None
+
+def to_int(x):
+    return int(x) if x else int()
+
 def convert_type(self, varlist: list, method: object):
     for var in varlist:
         value = method(getattr(self, var))

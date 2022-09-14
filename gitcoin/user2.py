@@ -1,4 +1,8 @@
-# __call__ to validate User class?
+from datetime import datetime
+from typing import ClassVar
+from attrs import define, field
+from helpers import ToDictMixin
+
 def comp_type(token_name):
     coin_category = {
         'fiat': ['USD'],
@@ -13,48 +17,55 @@ def comp_type(token_name):
 def filter(lst, date):
     return [i for i in lst if i.created<date]
 
-#mixin?
-
+@define(slots=False)
 class User:
-    _loaded = {}
+    _loaded: ClassVar = {}
+    handle: str
+    activity: list = field(factory=list)
+    interest: list = field(factory=list)
+    fulfillment: list = field(factory=list)
+    bounty: list = field(factory=list)
 
-    def __new__(cls, handle):
+    @classmethod
+    def load(cls, handle):
         if handle:
             user = cls._loaded.get(handle)
         else:
             return None
         if user is not None:
             return user        
-        user = super().__new__(cls)
-        user.handle = handle
-        user.activity = []
-        user.interest = []
-        user.fulfillment = []
-        user.bounty = []  # for Owner
+        
+        user = cls(handle)
         cls._loaded[handle] = user
         return user
-    
-    def __repr__(self):
-        return f'(User {self.handle}: activity={self.tally("activity")}, interest={self.tally("interest")}, fulfillment={self.tally("fulfillment")})'
-    
+
     def _update(self, attr):
         called_from = type(attr).__name__.lower()
         getattr(self, called_from).append(attr)
 
-class Owner(User):
-    def totalownedbounties(self, date):
-        bounties = [bounty for bounty in self.bounty if bounty.created<date]
-        return len(bounties)
+@define(slots=False)
+class Owner(User): pass
 
-class UserTally:
-    def __init__(self, user: User, date) -> None:
-        self.date = date
-        # use convert_type?
-        self.fulfillment = filter(user.fulfillment, date)
-        self.activity = filter(user.activity, date)
-        self.interest = filter(user.interest, date)
-        self.bounty = filter(user.bounty, date)
+@define(slots=False)
+class UserTally(ToDictMixin):
+    handle: str
+    date: datetime
+    fulfillment: list
+    activity: list
+    interest: list
+    bounty: list
     
+    @classmethod
+    def from_object(cls, user: User, date):
+        return cls(
+            user.handle,
+            date,
+            filter(user.fulfillment, date),
+            filter(user.activity, date),
+            filter(user.interest, date),
+            filter(user.bounty, date)
+        )
+
     @property
     def totalhours(self):
         hours = [work.hoursworked for work in self.fulfillment if work.hoursworked is not None]
@@ -82,6 +93,7 @@ class UserTally:
         except ZeroDivisionError:
             return 0 # is this right?
 
+@define(slots=False)
 class OwnerTally(UserTally):
     @property
     def totalownedbounties(self):
