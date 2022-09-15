@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "gitcoin"
+version = "0.1.0"
+description = ""
+authors = ["Kyunghee <khlee42@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.10"
+numpy = "^1.23.3"
+pandas = "^1.4.4"
+requests = "^2.28.1"
+jmespath = "^1.0.1"
+scipy = "^1.9.1"
+PyYAML = "^6.0"
+tqdm = "^4.64.1"
+pycoingecko = "^3.0.0"
+Historic-Crypto = "^0.1.6"
+attrs = "^22.1.0"
+PyGithub = "^1.55"
+requests-html = "^0.10.0"
+proxy = {git = "https://github.com/khlee42/proxy.git"}
+ipykernel = "^6.15.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
