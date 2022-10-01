@@ -21,10 +21,10 @@ def filter(lst, date):
 class User:
     _loaded: ClassVar = {}
     handle: str
-    activity: list = field(factory=list)
-    interest: list = field(factory=list)
-    fulfillment: list = field(factory=list)
-    bounty: list = field(factory=list)
+    _activity: list = field(factory=list)
+    _interest: list = field(factory=list)
+    _fulfillment: list = field(factory=list)
+    _bounty: list = field(factory=list)
 
     @classmethod
     def load(cls, handle):
@@ -40,9 +40,12 @@ class User:
         return user
 
     def _update(self, attr):
-        called_from = type(attr).__name__.lower()
+        called_from = '_' + type(attr).__name__.lower()
         getattr(self, called_from).append(attr)
-
+    
+    def get_tally(self, date):
+        return UserTally.from_object(self, date)
+        
 @define(slots=False)
 class Owner(User): pass
 
@@ -50,44 +53,44 @@ class Owner(User): pass
 class UserTally(ToDictMixin):
     handle: str
     date: datetime
-    fulfillment: list
-    activity: list
-    interest: list
-    bounty: list
+    _fulfillment: list
+    _activity: list
+    _interest: list
+    _bounty: list
     
     @classmethod
     def from_object(cls, user: User, date):
         return cls(
             user.handle,
             date,
-            filter(user.fulfillment, date),
-            filter(user.activity, date),
-            filter(user.interest, date),
-            filter(user.bounty, date)
+            filter(user._fulfillment, date),
+            filter(user._activity, date),
+            filter(user._interest, date),
+            filter(user._bounty, date)
         )
 
     @property
     def totalhours(self):
-        hours = [work.hoursworked for work in self.fulfillment if work.hoursworked is not None]
+        hours = [work.hoursworked for work in self._fulfillment if work.hoursworked is not None]
         return sum(hours)
     @property
     def totalearned(self):
-        amounts = [work.payout_amount for work in self.fulfillment if work.payout_amount is not None]
+        amounts = [work.payout_amount for work in self._fulfillment if work.payout_amount is not None]
         return sum(amounts)    
     @property        
     def totalbounties(self):
         pass
     @property        
     def totalsubs(self):
-        subs = [work for work in self.activity if work.activity_type=='work_submitted']
+        subs = [work for work in self._activity if work.activity_type=='work_submitted']
         return len(subs)
     @property    
     def totalfulfillments(self):
-        acceptedsubs = [work for work in self.fulfillment]
+        acceptedsubs = [work for work in self._fulfillment]
         return len(acceptedsubs)
     @property        
     def token_ratio(self):
-        tokens = [work.token_name for work in self.fulfillment if comp_type(work.token_name)=='token']
+        tokens = [work.token_name for work in self._fulfillment if comp_type(work.token_name)=='token']
         try:
             return len(tokens)/self.totalfulfillments
         except ZeroDivisionError:
@@ -97,5 +100,5 @@ class UserTally(ToDictMixin):
 class OwnerTally(UserTally):
     @property
     def totalownedbounties(self):
-        bounties = [bounty for bounty in self.bounty]
+        bounties = [bounty for bounty in self._bounty]
         return len(bounties)

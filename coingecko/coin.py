@@ -13,28 +13,28 @@ class CoinWrapper(ToDictMixin):
     avg_price: float
     avg_return: float
     std_return: float
-    kurt_return: float
-    skew_return: float
+    # kurt_return: float
+    # skew_return: float
     momentum: float
-    roc: float
-    prob_not_zero: float
+    # roc: float
+    # prob_not_zero: float
     
     @classmethod
-    def setup(cls, symbol, date):
+    def setup(cls, symbol, date, period=30):
         coin = Coin(symbol)
         coin.read_data()
         return cls(
             coin.before_listed(date),
             coin.get_volume(date),
             coin.get_price(date),
-            coin.avg_price(date),
-            coin.avg_return(date),
-            coin.std_return(date),
-            coin.kurt_return(date),
-            coin.skew_return(date),
-            coin.momentum(date),
-            coin.roc(date),
-            coin.prob_not_zero(date)
+            coin.avg_price(date, period),
+            coin.avg_return(date, period),
+            coin.std_return(date, period),
+            # coin.kurt_return(date, period),
+            # coin.skew_return(date, period),
+            coin.momentum(date, period),
+            # coin.roc(date, period),
+            # coin.prob_not_zero(date, period)
         )
 
 class Coin:
@@ -71,9 +71,13 @@ class Coin:
             return None
     
     def _window(self, var, date, period=30):
-        start = date - timedelta(period)
-        # error?
-        return self.df[(self.df.snapped_at>=start)&(self.df.snapped_at<date)][var]
+        if isinstance(period, int):
+            start = date - timedelta(period)
+            # error?
+            return self.df[(self.df.snapped_at>=start)&(self.df.snapped_at<date)][var]
+        elif isinstance(period, list):
+            start, end = period # end==date
+            return self.df[(self.df.snapped_at>=start)&(self.df.snapped_at<end)][var]
 
     def avg_price(self, date, period=30):
         prices = self._window('price', date, period)
@@ -97,17 +101,29 @@ class Coin:
 
     def momentum(self, date, period=10):
         '''source: https://tradesanta.com/blog/momentum-indicators-and-how-to-use-them'''
-        price = self.get_price(date)
-        start = date - timedelta(period)
-        price_period_ago = self.get_price(start)
+        # if period is a list, use the first element as start date and the second as end date
+        if isinstance(period, list):
+            start, end = period
+            price = self.get_price(end)
+            price_period_ago = self.get_price(start)
         
+        elif isinstance(period, int):    
+            price = self.get_price(date)
+            start = date - timedelta(period)
+            price_period_ago = self.get_price(start)
+            
         if price and price_period_ago:
             return price - price_period_ago
     
     def roc(self, date, period=10):
         '''Rate of Change'''
-        start = date - timedelta(period)
-        price_period_ago = self.get_price(start)
+        if isinstance(period, int):
+            start = date - timedelta(period)
+            price_period_ago = self.get_price(start)
+        elif isinstance(period, list):
+            start, end = period
+            price_period_ago = self.get_price(start)
+        
         momentum = self.momentum(date, period)
         
         if price_period_ago and momentum:

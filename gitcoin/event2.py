@@ -1,10 +1,10 @@
 from attrs import define, field
 import datetime
 from .user2 import User
-from helpers import to_date, to_float
+from helpers import to_date, to_float, ToDictMixin
 
-@define
-class Event:
+@define(slots=False)
+class Event(ToDictMixin):
     pk: int
     event_pk: int
     created: datetime = field(converter=to_date)
@@ -18,7 +18,7 @@ class Event:
             user = User.load(self.handle)
             user._update(self)
 
-@define
+@define(slots=False)
 class Activity(Event):
     activity_type: str
 
@@ -28,7 +28,7 @@ class Activity(Event):
 
 class Interest(Event): pass
 
-@define
+@define(slots=False)
 class Fulfillment(Event):
     token_name: str
     payout_status: str
