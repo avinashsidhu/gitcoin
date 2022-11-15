@@ -43,7 +43,9 @@ class CoinGeckoScraper:
         if self.coin_id:
             r = self.session.get(self.coin_url)
             try:
-                csvurl = r.html.find('a[href$=".csv"]')[0].attrs['href']
+                # CSS selector for the CSV download link; may need to update if the site changes
+                # csvurl = r.html.find('a[href$=".csv"]')[0].attrs['href']
+                csvurl = r.html.find('span[data-url$=".csv"]')[0].attrs['data-url']
                 return self.baseurl + csvurl
             except IndexError:
                 return None
@@ -58,3 +60,7 @@ class CoinGeckoScraper:
             open(self.file, 'wb').write(r.content)
         else:
             print('No file')
+
+if __name__ == '__main__':
+    coin = CoinGeckoScraper('zrx')
+    coin.get_price_chart()
