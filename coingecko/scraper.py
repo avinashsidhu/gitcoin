@@ -25,7 +25,8 @@ class CoinGecko:
 
 class CoinGeckoScraper:
     baseurl = 'https://www.coingecko.com'
-    charturl = '/en/coins/%s/historical_data/usd#panel'
+    # charturl = '/en/coins/%s/historical_data/usd#panel'
+    charturl = '/en/coins/%s/historical_data#panel'
     dir = 'data/coins/'
     session = HTMLSession()
 
@@ -62,5 +63,5 @@ class CoinGeckoScraper:
             print('No file')
 
 if __name__ == '__main__':
-    coin = CoinGeckoScraper('zrx')
+    coin = CoinGeckoScraper('$ads')
     coin.get_price_chart()
